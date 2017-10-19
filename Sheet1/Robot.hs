@@ -32,7 +32,12 @@ distSameDir (Move x y) d old
 distSameDir (Rotate x y) d old = distSameDir y (changeDir d x) old
 distSameDir (Stop) d old = 0
 
-distStraight :: Robot -> Int -- working
-distStraight (Move x y) = x + distStraight y
-distStraight (Rotate x y) = 0
-distStraight (Stop) = 0
+toInt :: Float -> Int
+toInt = round
+
+distStraight :: Robot -> Int -> Int -> Direction -> Direction -> Float
+distStraight (Move a r) x y d old
+                                | (d == old) = distStraight r (x + a) y d old
+                                | otherwise = distStraight r x (y + a) d old
+distStraight (Rotate a r) x y d old = distStraight r x y (changeDir d a) d
+distStraight (Stop) x y d old = sqrt(fromIntegral(x*x + y*y))
