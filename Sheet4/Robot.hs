@@ -5,8 +5,7 @@ data Robot k = Move Int k
 data Direction = North
                 | South
                 | West
-                | East
-                | Null deriving (Eq, Show)
+                | East deriving (Eq, Show)
 
 instance Functor Robot where
   fmap f (Stop) = Stop
