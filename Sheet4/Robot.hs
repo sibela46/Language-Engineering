@@ -56,3 +56,6 @@ distStraight = cata alg where
                           | otherwise = k x (y+a) d old
   alg (Rotate a k) x y d old = k x y (changeDir d a) d
   alg (Stop) x y d old = sqrt(fromIntegral(x*x + y*y))
+
+--mcata :: ((x -> a)->(f x -> a)) -> Fix f -> a
+--mcata x = x(mcata x).in'
