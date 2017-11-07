@@ -1,42 +1,38 @@
-import Text.Megaparsec
-import Control.Applicative
-import Text.Megaparsec.String
-import Text.Megaparsec.Lexer
+import Yoda
+import Data.Char
 
-{-
-Question 1
-a) string term <*> "+" <*> term
-b) many (string "+" *> term) returns 0 or more of the following string
-c)
--}
+data Robot = Move Int Robot
+           | RotateLeft Robot
+           | RotateRight Robot
+           | Stop deriving Show
 
-data MySentence = Sent MyWord [MyWord] deriving Show
-data MyWord = MyWord MyLetter [MyLetter] deriving Show
-data MyLetter = MyLetter Char deriving Show
+whitespace :: Parser ()
+whitespace = many (oneOf " \t,;\n") *> pure ()
 
-sentence :: Parser MySentence
-sentence = Sent <$> word <*> some (string " " *> word)
+tok :: String -> Parser String
+tok s = whitespace *> string s <* whitespace
 
-word :: Parser MyWord
-word = MyWord <$> letter <*> some letter
+number :: Parser Int
+number = whitespace *> (read <$> some (oneOf "0123456789")) <* whitespace
 
-letter :: Parser MyLetter
-letter = MyLetter <$> alphaNumChar
+parseRobot :: Parser Robot
+parseRobot = Move <$ tok "move" <*> number <*> parseRobot
+           <|> RotateLeft <$ tok "rotate left" <*> parseRobot
+           <|> RotateRight <$ tok "rotate right" <*> parseRobot
+           <|> Stop <$ tok "stop"
 
-helloParse :: Parser String
-helloParse = string "hello"
+data DataB = B DataB'
+           | A Int
+           | D deriving Show
 
-manyHellos :: Parser [String]
-manyHellos = many (string "hello")
+data DataB' = Data Int DataB'
+            | Empty deriving Show
 
-someHellos :: Parser [String]
-someHellos = some (string "hello")
+parseBad :: Parser DataB
+parseBad = B <$> parseBad'
+        <|> A <$ tok "a" <*> number
+        <|> D <$ tok ""
 
-onlySome :: Parser Char
-onlySome = oneOf ['h', 'i']
-
-none :: Parser Char
-none = noneOf [',', '!']
-
-tryParse :: Parser a -> Parser a
-tryParse p = try (p)
+parseBad' :: Parser DataB'
+parseBad' = Data <$> number <*> parseBad'
+        <|> Empty <$ pure (Empty)

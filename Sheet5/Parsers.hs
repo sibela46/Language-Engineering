@@ -1,4 +1,5 @@
 import Text.Megaparsec
+import Text.Megaparsec.String
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer
 
