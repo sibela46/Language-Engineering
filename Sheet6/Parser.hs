@@ -39,6 +39,9 @@ Cons x xs *> Cons y ys = Cons y ys
 
 instance Alternative List where
   empty = Empty
-  Empty <|> Cons x xs = Cons x xs
-  Cons x xs <|> Empty = Cons x xs
---  Cons x xs <|> Cons y ys = Cons x (Cons y (xs ++ ys))
+  Empty <|> x = x
+  x <|> Empty = x
+  (Cons x xs) <|> (Cons y ys) = (Cons x xs) ++ (Cons y ys) where
+    (++) :: List a -> List a -> List a
+    Empty ++ xs = xs
+    Cons y ys ++ xs = Cons y (ys ++ xs)
