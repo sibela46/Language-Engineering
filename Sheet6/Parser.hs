@@ -25,7 +25,7 @@ instance Functor List where
 
 (<$) :: a -> List b -> List a
 x <$ Empty = Cons x Empty
-x <$ Cons y ys = Cons x Empty
+x <$ Cons y ys = Cons x (x Main.<$ ys)
 
 (++) :: List a -> List a -> List a
 Empty ++ x = x
@@ -39,18 +39,17 @@ instance Applicative List where
 (<*) :: List a -> List b -> List a
 Empty <* Cons x xs = Empty
 Cons x xs <* Empty = Cons x xs
-Cons x xs <* Cons y ys = Cons x xs
+xs <* Cons y ys = xs Main.++ (xs Main.<* ys)
 
 (*>) :: List a -> List b -> List b
 Cons x xs *> Empty = Empty
 Empty *> Cons x xs = Cons x xs
-Cons x xs *> Cons y ys = Cons y ys
+Cons x xs *> Cons y Empty = Cons y (xs Main.*> Cons y Empty)
+xs *> Cons y ys = (xs Main.*> ys) Main.++ (xs Main.*> Cons y Empty)
 
 instance Alternative List where
   empty = Empty
-  Empty <|> x = x
-  x <|> Empty = x
-  (Cons x xs) <|> (Cons y ys) = (Cons x xs) ++ (Cons y ys)
+  x <|> y = x ++ y
 
 liftATwo :: Applicative f => (a->b->c) -> f a -> f b -> f c
 liftATwo f x y = f <$> x<*>y
