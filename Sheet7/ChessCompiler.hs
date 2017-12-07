@@ -66,7 +66,7 @@ movep = Alg <$ tok "Alg" <*> piece <*> cell
 
 quant :: Parser Quant
 quant = Prom <$ tok "Prom" <*> piece <*> quant
-    <|> Chck <$ tok "Chck" <*> quant
+    <|> Chck <$ tok "Chck" <*> quant <*> tok "+"
     <|> Null <$ pure Null
 
 boolean :: Parser Bool
