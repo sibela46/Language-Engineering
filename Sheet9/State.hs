@@ -67,5 +67,8 @@ while p f =
 fact :: Int -> Int
 fact x =  fst $ execState (while ((>0).snd) (\(x, y)-> (x*y, y-1))) (1, x)
 
+triangle :: Int -> Int
+triangle x = fst $ execState (while ((>0).snd) (\(x,y) -> (x+y, y-1))) (0, x)
+
 liftM2 :: Monad m => (a->b->c) -> m a -> m b -> m c
-liftM2 f mx my = (mx >>= f)
+liftM2 f ma mb = ma >>= (\a -> (mb >>= (\b -> return(f a b))))
