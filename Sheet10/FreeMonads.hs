@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeOperators #-}
+
 data Nondet cnt = Fail
                 | Split cnt cnt
 
@@ -25,6 +27,21 @@ data Free f a = Var a
 instance Functor f => Functor (Free f) where
   fmap f (Var v) = Var (f v)
   fmap f (Con op) = Con (fmap (fmap f) op)
+
+instance Functor f => Applicative (Free f) where
+  pure = return
+  (<*>) = ap
+
+liftM2 :: Monad m => (a->b->c) -> m a -> m b -> m c
+liftM2 f ma mb = ma >>= (\a -> (mb >>= (\b -> return(f a b))))
+
+ap :: (Monad m) => m (a -> b) -> m a -> m b
+ap = liftM2 id
+
+instance Functor f => Monad (Free f) where
+  return v = Var v
+  Var v >>= f = f v
+  Con op >>= f = Con (fmap (>>=f) op)
 
 eval :: Functor f => (f a -> a) -> Free f a -> a
 eval alg (Var v) = v
@@ -55,4 +72,31 @@ handleState = handle gen alg where
   gen x = (\s -> (s,x))
   alg :: STATE s (s -> (s,a)) -> (s -> (s, a))
   alg (Get f) = (\s -> f s s)
-  alg (Put s' k) = (\s -> k s)
+  alg (Put s' k) = (\s -> k s')
+
+data (:+:) f g k = L (f k)
+                 | R (g k)
+
+infixr 5 :+:
+
+instance (Functor f, Functor g) => Functor (f:+:g) where
+  fmap h (L op) = L (fmap h op)
+  fmap h (R op) = R (fmap h op)
+
+{-instance Applicative (Exception e) where
+  pure x = Continue x
+  (Throw e) <*> (Continue x) = Throw e
+  (Continue f) <*> (Continue y) = Continue (f y)
+
+instance Monad (Exception e) where
+  return x = Continue x
+  Continue x >>= f = (f x)-}
+
+runExceHandler :: Functor g => Free ((Exception e) :+: g) a -> Free g (Either e a)
+runExceHandler = handle gen alg where
+  gen :: Functor g => a -> Free g (Either e a)
+  gen x = return (Right x)
+  alg :: Functor g => (Exception e :+: g)(Free g (Either e a)) -> Free g (Either e a)
+  alg (L (Throw e)) = return (Left e)
+  alg (L (Continue k)) = k
+  alg (R op) = Con op
