@@ -72,7 +72,7 @@ handleState = handle gen alg where
   gen x = (\s -> (s,x))
   alg :: STATE s (s -> (s,a)) -> (s -> (s, a))
   alg (Get f) = (\s -> f s s)
-  alg (Put s' k) = (\s -> k s')
+  alg (Put s' k) = (\s -> k s)
 
 data (:+:) f g k = L (f k)
                  | R (g k)
@@ -100,3 +100,34 @@ runExceHandler = handle gen alg where
   alg (L (Throw e)) = return (Left e)
   alg (L (Continue k)) = k
   alg (R op) = Con op
+
+{-runStateHandler :: Functor g => Free ((STATE s) :+: g) a -> s -> Free g ((s, a))
+runStateHandler = handle gen alg where
+  gen :: Functor g => a -> s ->  Free g ((s, a))
+  gen x s = return ((s, x))
+  alg :: Functor g => (STATE s :+: g)(Free g (s, a)) -> s -> Free g ((s, a))
+  alg (L (Get f)) = (\s -> f s)-}
+
+myCon :: Free Nondet [a] -> Free Nondet [a] -> [a]
+myCon freeA freeB = concat (handleNondet freeA ++ handleNondet freeB)
+
+runNondetHandler :: Functor g => Free (Nondet :+: g) a -> Free g ([a])
+runNondetHandler = handle gen alg where
+  gen :: Functor g => a -> Free g ([a])
+  gen x = return [x]
+  alg :: Functor g => (Nondet :+: g)(Free g ([a])) -> Free g ([a])
+  alg (L (Fail)) = return []
+  alg (L (Split x y)) = return (myCon x y)
+  alg (R op) = Con op
+
+data Void s
+
+instance Functor Void where
+  fmap = undefined
+
+run :: Free (Void) a -> a
+run (Var x) = x
+run _ = undefined
+
+{-runGlobalExce :: Free (Nondet :+: (Exception e) :+: Void) a -> Either e [a]
+runGlobalExce = -}
